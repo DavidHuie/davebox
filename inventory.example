@@ -1,0 +1,14 @@
+[davebox-master]
+8.8.8.8
+
+[davebox-master:vars]
+replicas=2
+
+[davebox-slaves]
+8.8.8.9
+
+[davebox-slaves:vars]
+master_davebox=8.8.8.8
+
+[all:vars]
+ansible_ssh_user=user

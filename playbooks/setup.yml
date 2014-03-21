@@ -1,0 +1,47 @@
+---
+
+- hosts: all
+
+  tasks:
+
+    - name: install ansible required packages
+      sudo: yes
+      apt: pkg={{ item }} update_cache=yes state=latest
+      with_items:
+        - python-pycurl
+        - python-psycopg2
+
+- hosts: all
+
+  tasks:
+
+    - name: add glusterfs repository
+      sudo: yes
+      apt_repository: repo='ppa:semiosis/ubuntu-glusterfs-3.4' state=present
+
+    - name: install all packages
+      sudo: yes
+      apt: pkg={{ item }} update_cache=yes state=latest
+      with_items:
+        - glusterfs-server
+        - glusterfs-client
+
+- hosts: all
+
+  tasks:
+
+    - name: create brick
+      sudo: yes
+      command:
+        creates=/brick
+        mkdir /brick
+
+- hosts: davebox-master
+
+  tasks:
+
+    - name: create shared volume
+      sudo: yes
+      command:
+        creates=/shared_volume
+        mkdir /shared_volume

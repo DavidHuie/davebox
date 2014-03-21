@@ -1,0 +1,53 @@
+---
+
+- hosts: davebox-slaves
+
+  tasks:
+
+    - name: probe for gluster master
+      sudo: yes
+      command: gluster peer probe {{ master_davebox }}
+
+- hosts: davebox-master
+
+  tasks:
+
+    - name: register volumes
+      sudo: yes
+      command: gluster volume list
+      register: gluster_volumes
+
+    - name: create volume
+      sudo: yes
+      when: '"volume1" not in gluster_volumes.stdout'
+      command: gluster volume create volume1 replica {{ replicas }} transport tcp
+               {% for host in groups['all'] %}
+                 {{ host }}:/brick
+               {% endfor %} force
+
+    - name: make volume only accessible to the master
+      sudo: yes
+      command: gluster volume set volume1 auth.allow {{ groups['davebox-master'] | first }}
+
+    - name: register volume status
+      sudo: yes
+      command: gluster volume info volume1
+      register: volume_status
+
+    - name: start volume
+      sudo: yes
+      when: '"Started" not in volume_status.stdout'
+      command: gluster volume start volume1
+
+    - name: register mounted volumes
+      command: mount
+      register: mounted_volumes
+
+    - name: mount gluster volume
+      sudo: yes
+      when: '"shared_volume" not in mounted_volumes.stdout'
+      command: mount -t glusterfs {{ groups['davebox-master'] | first }}:/volume1 /shared_volume
+
+    - name: change volume permissions
+      sudo: yes
+      command: chmod a+rwx /shared_volume
