@@ -126,7 +126,7 @@ function sync {
       | gsed "s:^\S*\s*\S*\s*\S*\s*\S*\s*:/:" | gsed "s:^/\.::" | sort > "$STATE_DIR/tree-current"
 
   # Prevent bringing back locally deleted files or removing new local files
-  cp -f "$STATE_DIR/added-prev" "$TMP_DIR/fetch-exclude"
+  gcp -f "$STATE_DIR/added-prev" "$TMP_DIR/fetch-exclude"
   sort "$STATE_DIR/tree-prev" "$STATE_DIR/tree-current" | uniq -u >> "$TMP_DIR/fetch-exclude"
 
   # It is difficult to only create the backup directory if needed; instead
@@ -138,7 +138,7 @@ function sync {
   # Order of includes/excludes/filters is EXTREMELY important
   rsync --dry-run \
         -auvzxi --delete $RSYNC_OPTS --exclude "/$DOT_DIR" --exclude-from "$TMP_DIR/fetch-exclude" $USER_RULES $REMOTE/ . \
-      | grep "^[ch<>\.\*][f]\|\*deleting" | gsed "s:^\S*\s*::" | gsed 's:\d96:\\\`:g' | gsed "s:\(.*\):if [ -f \"\1\" ]; then cp --parents \"\1\" $DOT_DIR/backups/$TIMESTAMP; fi:" | sh || die "BACKUP"
+      | grep "^[ch<>\.\*][f]\|\*deleting" | gsed "s:^\S*\s*::" | gsed 's:\d96:\\\`:g' | gsed "s:\(.*\):if [ -f \"\1\" ]; then gcp --parents \"\1\" $DOT_DIR/backups/$TIMESTAMP; fi:" | sh || die "BACKUP"
   [ "$(ls -A $DOT_DIR/backups/$TIMESTAMP)" ] && echo "  | Some files were backed up to $DOT_DIR/backups/$TIMESTAMP"
   [ "$(ls -A $DOT_DIR/backups/$TIMESTAMP)" ] || rmdir $DOT_DIR/backups/$TIMESTAMP
 
@@ -212,7 +212,7 @@ function pack {
             then
                 echo -n "Processing: $TSTAMP ... "
                 echo -n "Moving ... "
-                (cp -rfl $DIR/* $DOT_DIR/pack && rm -rf $DIR)        || die MV
+                (gcp -rfl $DIR/* $DOT_DIR/pack && rm -rf $DIR)        || die MV
                 echo -n "Adding ... "
                 (cd $DOT_DIR/pack && git add .)                      || die ADD
                 echo -n "Committing ... "
